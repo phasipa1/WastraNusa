@@ -5,10 +5,11 @@
  * @format
  */
 
-import React from 'react';
-import {ScrollView, StyleSheet,  Text, View, Image, ImageBackground, TextInput, Pressable} from 'react-native';
-import {Element3, Receipt21, Clock, Message, SearchNormal} from 'iconsax-react-native';
-import { fontType, colors } from './src/theme';
+import React, { useState } from 'react';
+import {ScrollView, StyleSheet,  Text, View, Image, ImageBackground, TextInput, Pressable, TouchableOpacity, FlatList} from 'react-native';
+import {Element3, Receipt21, Clock, Message, SearchNormal, Notification} from 'iconsax-react-native';import { fontType, colors } from './src/theme';
+import { CategoryList, BlogList } from './src/data';
+import { ListHorizontal, ItemSmall } from './src/components';
 
 export default function App() {
   return (
@@ -34,244 +35,263 @@ export default function App() {
   );
 }
 const ListBlog = () => {
+  const horizontalData = BlogList.slice(0, 3);
+  const verticalData = BlogList.slice(3);
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.listBlog}>
-        <ScrollView
-          showsHorizontalScrollIndicator={false}
-          horizontal
-          contentContainerStyle={{gap: 15}}>
-          <View style={{...itemHorizontal.cardItem, marginLeft: 24}}>
-            <ImageBackground
-              style={itemHorizontal.cardImage}
-              resizeMode="cover"
-              imageStyle={{borderRadius: 15}}
-              source={{
-                uri: 'https://i.pinimg.com/736x/22/a7/4e/22a74e2417761a3e24bea91fc273244b.jpg',
-              }}>
-              <View style={itemHorizontal.cardContent}>
-                <View style={itemHorizontal.cardInfo}>
-                  <Text style={itemHorizontal.cardTitle}>
-                  Perjalanan Batik dari Keraton ke Dunia Internasiona
-                  </Text>
-                </View>
-                <View>
-                  <View style={itemHorizontal.cardIcon}>
-                    <Receipt21 color={colors.white()} variant="Linear" size={20} />
-                  </View>
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
-          <View style={itemHorizontal.cardItem}>
-            <ImageBackground
-              style={itemHorizontal.cardImage}
-              resizeMode="cover"
-              imageStyle={{borderRadius: 15}}
-              source={{
-                uri: 'https://i.pinimg.com/736x/7c/81/dc/7c81dceccdf519d8d827186a31c921ce.jpg',
-              }}>
-              <View style={itemHorizontal.cardContent}>
-                <View style={itemHorizontal.cardInfo}>
-                  <Text style={itemHorizontal.cardTitle}>
-                   Batik Tulis: Seni dalam Setiap Goresan
-                  </Text>
-                </View>
-                <View>
-                  <View style={itemHorizontal.cardIcon}>
-                    <Receipt21 color={colors.white()} variant="Linear" size={20} />
-                  </View>
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
-          <View style={itemHorizontal.cardItem}>
-            <ImageBackground
-              style={itemHorizontal.cardImage}
-              resizeMode="cover"
-              imageStyle={{borderRadius: 15}}
-              source={{
-                uri: 'https://i.pinimg.com/736x/7d/c6/80/7dc6801ae2ef77813288f8d2799e2849.jpg',
-              }}>
-              <View style={itemHorizontal.cardContent}>
-                <View style={itemHorizontal.cardInfo}>
-                  <Text style={itemHorizontal.cardTitle}>
-                  Motif Parang: Simbol Kekuasaan dan Keteguhan
-                  </Text>
-                </View>
-                <View>
-                  <View style={itemHorizontal.cardIcon}>
-                    <Receipt21 color={colors.white()} variant="Linear" size={20} />
-                  </View>
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
-        </ScrollView>
-        <View style={itemVertical.listCard}>
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: 'https://i.pinimg.com/736x/08/d5/e7/08d5e7973d5509b9d01e3f6a93bd8861.jpg',
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <View style={{gap: 5, width: '70%'}}>
-                  <Text style={itemVertical.cardCategory}>Sejarah Batik</Text>
-                  <Text style={itemVertical.cardTitle}>Batik di Era Kerajaan Jawa</Text>
-                </View>
-                <Receipt21
-                  color={colors.black(0.6)}
-                  variant="Linear"
-                  size={20}
-                />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Clock
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Message
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Text style={itemVertical.cardText}>89</Text>
-              </View>
-            </View>
-          </View>
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: 'https://i.pinimg.com/736x/8c/8a/b7/8c8ab751bee7a9716bba8e39f3f3c180.jpg',
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <View style={{gap: 5, width: '70%'}}>
-                  <Text style={itemVertical.cardCategory}>Sejarah Batik</Text>
-                  <Text style={itemVertical.cardTitle}>
-                  Batik sebagai Identitas Nasional
-                  </Text>
-                </View>
-                <Receipt21
-                  color={colors.black(0.6)}
-                  variant="Linear"
-                  size={20}
-                />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Clock
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Message
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Text style={itemVertical.cardText}>89</Text>
-              </View>
-            </View>
-          </View>
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: 'https://i.pinimg.com/736x/fe/4f/54/fe4f5477b2fdd258535ecedac916e9d0.jpg',
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <View style={{gap: 5, width: '70%'}}>
-                  <Text style={itemVertical.cardCategory}>Jenis Batik</Text>
-                  <Text style={itemVertical.cardTitle}>
-                  Antara Tradisi dan Inovasi: Evolusi Batik Nusantara
-                  </Text>
-                </View>
-                <Receipt21
-                  color={colors.black(0.6)}
-                  variant="Linear"
-                  size={20}
-                />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Clock
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Message
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Text style={itemVertical.cardText}>89</Text>
-              </View>
-            </View>
-          </View>
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: 'https://i.pinimg.com/736x/c4/c7/1b/c4c71b4081436d84dea6a730faaf9f0f.jpg',
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <View style={{gap: 5, width: '70%'}}>
-                  <Text style={itemVertical.cardCategory}>Filosofi Dan Motif Batik</Text>
-                  <Text style={itemVertical.cardTitle}>
-                   Megamendung: Filosofi Tenang dalam Badai
-                  </Text>
-                </View>
-                <Receipt21
-                  color={colors.black(0.6)}
-                  variant="Linear"
-                  size={20}
-                />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Clock
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Message
-                  size={10}
-                  variant="Linear"
-                  color={colors.grey(0.6)}
-                />
-                <Text style={itemVertical.cardText}>89</Text>
-              </View>
-            </View>
-          </View>
+        <ListHorizontal data={horizontalData} />
+        <View style={styles.listCard}>
+          {verticalData.map((item, index) => (
+            <ItemSmall item={item} key={index} />
+          ))}
         </View>
       </View>
+      
     </ScrollView>
+    
   );
 };
+
+// const ListBlog = () => {
+//   return (
+//     <ScrollView>
+//       <View style={styles.listBlog}>
+//         <ScrollView
+//           showsHorizontalScrollIndicator={false}
+//           horizontal
+//           contentContainerStyle={{gap: 15}}>
+//           <View style={{...itemHorizontal.cardItem, marginLeft: 24}}>
+//             <ImageBackground
+//               style={itemHorizontal.cardImage}
+//               resizeMode="cover"
+//               imageStyle={{borderRadius: 15}}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/22/a7/4e/22a74e2417761a3e24bea91fc273244b.jpg',
+//               }}>
+//               <View style={itemHorizontal.cardContent}>
+//                 <View style={itemHorizontal.cardInfo}>
+//                   <Text style={itemHorizontal.cardTitle}>
+//                   Perjalanan Batik dari Keraton ke Dunia Internasiona
+//                   </Text>
+//                 </View>
+//                 <View>
+//                   <View style={itemHorizontal.cardIcon}>
+//                     <Receipt21 color={colors.white()} variant="Linear" size={20} />
+//                   </View>
+//                 </View>
+//               </View>
+//             </ImageBackground>
+//           </View>
+//           <View style={itemHorizontal.cardItem}>
+//             <ImageBackground
+//               style={itemHorizontal.cardImage}
+//               resizeMode="cover"
+//               imageStyle={{borderRadius: 15}}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/7c/81/dc/7c81dceccdf519d8d827186a31c921ce.jpg',
+//               }}>
+//               <View style={itemHorizontal.cardContent}>
+//                 <View style={itemHorizontal.cardInfo}>
+//                   <Text style={itemHorizontal.cardTitle}>
+//                    Batik Tulis: Seni dalam Setiap Goresan
+//                   </Text>
+//                 </View>
+//                 <View>
+//                   <View style={itemHorizontal.cardIcon}>
+//                     <Receipt21 color={colors.white()} variant="Linear" size={20} />
+//                   </View>
+//                 </View>
+//               </View>
+//             </ImageBackground>
+//           </View>
+//           <View style={itemHorizontal.cardItem}>
+//             <ImageBackground
+//               style={itemHorizontal.cardImage}
+//               resizeMode="cover"
+//               imageStyle={{borderRadius: 15}}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/7d/c6/80/7dc6801ae2ef77813288f8d2799e2849.jpg',
+//               }}>
+//               <View style={itemHorizontal.cardContent}>
+//                 <View style={itemHorizontal.cardInfo}>
+//                   <Text style={itemHorizontal.cardTitle}>
+//                   Motif Parang: Simbol Kekuasaan dan Keteguhan
+//                   </Text>
+//                 </View>
+//                 <View>
+//                   <View style={itemHorizontal.cardIcon}>
+//                     <Receipt21 color={colors.white()} variant="Linear" size={20} />
+//                   </View>
+//                 </View>
+//               </View>
+//             </ImageBackground>
+//           </View>
+//         </ScrollView>
+//         <View style={itemVertical.listCard}>
+//           <View style={itemVertical.cardItem}>
+//             <Image
+//               style={itemVertical.cardImage}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/08/d5/e7/08d5e7973d5509b9d01e3f6a93bd8861.jpg',
+//               }}
+//             />
+//             <View style={itemVertical.cardContent}>
+//               <View
+//                 style={{
+//                   flexDirection: 'row',
+//                   justifyContent: 'space-between',
+//                 }}>
+//                 <View style={{gap: 5, width: '70%'}}>
+//                   <Text style={itemVertical.cardCategory}>Sejarah Batik</Text>
+//                   <Text style={itemVertical.cardTitle}>Batik di Era Kerajaan Jawa</Text>
+//                 </View>
+//                 <Receipt21
+//                   color={colors.black(0.6)}
+//                   variant="Linear"
+//                   size={20}
+//                 />
+//               </View>
+//               <View style={itemVertical.cardInfo}>
+//                 <Clock
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Message
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Text style={itemVertical.cardText}>89</Text>
+//               </View>
+//             </View>
+//           </View>
+//           <View style={itemVertical.cardItem}>
+//             <Image
+//               style={itemVertical.cardImage}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/8c/8a/b7/8c8ab751bee7a9716bba8e39f3f3c180.jpg',
+//               }}
+//             />
+//             <View style={itemVertical.cardContent}>
+//               <View
+//                 style={{
+//                   flexDirection: 'row',
+//                   justifyContent: 'space-between',
+//                 }}>
+//                 <View style={{gap: 5, width: '70%'}}>
+//                   <Text style={itemVertical.cardCategory}>Sejarah Batik</Text>
+//                   <Text style={itemVertical.cardTitle}>Batik sebagai Identitas Nasional
+//                   </Text>
+//                 </View>
+//                 <Receipt21
+//                   color={colors.black(0.6)}
+//                   variant="Linear"
+//                   size={20}
+//                 />
+//               </View>
+//               <View style={itemVertical.cardInfo}>
+//                 <Clock
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Message
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Text style={itemVertical.cardText}>89</Text>
+//               </View>
+//             </View>
+//           </View>
+//           <View style={itemVertical.cardItem}>
+//             <Image
+//               style={itemVertical.cardImage}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/fe/4f/54/fe4f5477b2fdd258535ecedac916e9d0.jpg',
+//               }}
+//             />
+//             <View style={itemVertical.cardContent}>
+//               <View
+//                 style={{
+//                   flexDirection: 'row',
+//                   justifyContent: 'space-between',
+//                 }}>
+//                 <View style={{gap: 5, width: '70%'}}>
+//                   <Text style={itemVertical.cardCategory}>Jenis Batik</Text>
+//                   <Text style={itemVertical.cardTitle}>
+//                   Antara Tradisi dan Inovasi: Evolusi Batik Nusantara
+//                   </Text>
+//                 </View>
+//                 <Receipt21
+//                   color={colors.black(0.6)}
+//                   variant="Linear"
+//                   size={20}
+//                 />
+//               </View>
+//               <View style={itemVertical.cardInfo}>
+//                 <Clock
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Message
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Text style={itemVertical.cardText}>89</Text>
+//               </View>
+//             </View>
+//           </View>
+//           <View style={itemVertical.cardItem}>
+//             <Image
+//               style={itemVertical.cardImage}
+//               source={{
+//                 uri: 'https://i.pinimg.com/736x/c4/c7/1b/c4c71b4081436d84dea6a730faaf9f0f.jpg',
+//               }}
+//             />
+//             <View style={itemVertical.cardContent}>
+//               <View
+//                 style={{
+//                   flexDirection: 'row',
+//                   justifyContent: 'space-between',
+//                 }}>
+//                 <View style={{gap: 5, width: '70%'}}>
+//                   <Text style={itemVertical.cardCategory}>Filosofi Dan Motif Batik</Text>
+//                   <Text style={itemVertical.cardTitle}>
+//                    Megamendung: Filosofi Tenang dalam Badai
+//                   </Text>
+//                 </View>
+//                 <Receipt21
+//                   color={colors.black(0.6)}
+//                   variant="Linear"
+//                   size={20}
+//                 />
+//               </View>
+//               <View style={itemVertical.cardInfo}>
+//                 <Clock
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Message
+//                   size={10}
+//                   variant="Linear"
+//                   color={colors.grey(0.6)}
+//                 />
+//                 <Text style={itemVertical.cardText}>89</Text>
+//               </View>
+//             </View>
+//           </View>
+//         </View>
+//       </View>
+//     </ScrollView>
+//   );
+// };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -424,3 +444,37 @@ const itemHorizontal = StyleSheet.create({
     borderRadius: 5,
   },
 });
+
+const ItemCategory = ({item, onPress, color}) => {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <View style={category.item}>
+        <Text style={{...category.title, color}}>{item.categoryName}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+const FlatListCategory = () => {
+  const [selected, setSelected] = useState(1);
+  const renderItem = ({item}) => {
+    const color = item.id === selected ? colors.blue() : colors.grey();
+    return (
+      <ItemCategory
+        item={item}
+        onPress={() => setSelected(item.id)}
+        color={color}
+      />
+    );
+  };
+  return (
+    <FlatList
+      data={CategoryList}
+      keyExtractor={item => item.id}
+      renderItem={item => renderItem({...item})}
+      ItemSeparatorComponent={() => <View style={{width: 10}} />}
+      contentContainerStyle={{paddingHorizontal: 24}}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+    />
+  );
+};
