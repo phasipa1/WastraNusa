@@ -4,13 +4,18 @@ import {SearchNormal, Element3, Clock, Message, Receipt21} from 'iconsax-react-n
 import {colors, fontType} from '../../theme';
 import {ListHorizontal, ItemSmall} from '../../components';
 import {CategoryList, BlogList} from '../../data';
+import {Edit} from 'iconsax-react-native';
+import {useNavigation} from '@react-navigation/native';
+
+
 
 export default function Home() {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }]}>
-      <Text style={styles.title}>WastraNusa</Text>
+        <Text style={styles.title}>WastraNusa</Text>
       </View>
       
       {/* Search Bar */}
@@ -32,9 +37,17 @@ export default function Home() {
 
       {/* List Blog */}
       <ListBlog />
+
+      {/* Floating Button */}
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('AddBlog')}>
+        <Edit color="white" variant="Linear" size={20} />
+      </TouchableOpacity>
     </View>
   );
 }
+
 
 const ListBlog = () => {
   const horizontalData = BlogList.slice(0, 3);
@@ -82,6 +95,23 @@ const FlatListCategory = () => {
 };
 
 const styles = StyleSheet.create({
+  floatingButton: {
+  backgroundColor: colors.blue(),
+  padding: 15,
+  position: 'absolute',
+  bottom: 24,
+  right: 24,
+  borderRadius: 10,
+  shadowColor: colors.blue(),
+  shadowOffset: {
+    width: 0,
+    height: 4,
+  },
+  shadowOpacity: 0.3,
+  shadowRadius: 4.65,
+  elevation: 8,
+},
+
   container: {
     flex: 1,
     backgroundColor: '#D4F6FF',

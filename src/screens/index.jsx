@@ -1,5 +1,7 @@
 import Home from "./Home";
 import About from "./About";
 import Detail from "./Detail";
-export {Home, About, Detail}
+import Bookmark from "./Bookmark";
+import AddBlogForm from "./AddBlogForm";
+export {Home, About, Detail, Bookmark, AddBlogForm}
 
