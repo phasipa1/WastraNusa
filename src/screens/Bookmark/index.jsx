@@ -6,27 +6,25 @@ import {fontType, colors} from '../../theme';
 // Dummy data bookmark
 const bookmarkedItems = [
   {
-    id: '1',
-    image: 'https://example.com/tenun1.jpg',
-    category: 'Budaya',
-    title: 'Eksplorasi Tenun Ikat Sumba',
-    createdAt: '10 Mei 2025',
-    totalComments: 12,
+    id: 3,
+    title: 'Motif Parang : Simbol Kekuasaan dan Keteguhan',
+    category: 'Filosofi Dan Motif Batik',
+    image:'https://i.pinimg.com/736x/fe/4f/54/fe4f5477b2fdd258535ecedac916e9d0.jpg',
+    totalComments: 89,
   },
   {
-    id: '2',
-    image: 'https://example.com/tenun2.jpg',
-    category: 'Sejarah',
-    title: 'Jejak Wastra Nusa di Masa Kolonial',
-    createdAt: '3 Mei 2025',
-    totalComments: 8,
+   id: 7,
+   title: 'Megamendung : Filosofi Tenang dalam Badai',
+   category: 'Filosofi Dan Motif Batik',
+   image:'https://i.pinimg.com/736x/c4/c7/1b/c4c71b4081436d84dea6a730faaf9f0f.jpg',
+   totalComments: 89,
   },
 ];
 
 const BookmarkScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bookmark Saya</Text>
+      <Text style={styles.title}>Bookmark</Text>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.list}>
           {bookmarkedItems.length > 0 ? (
@@ -47,15 +45,16 @@ export default BookmarkScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white(),
+    backgroundColor: '#D4F6FF',
     paddingHorizontal: 24,
     paddingTop: 16,
   },
   title: {
-    fontSize: 20,
+    fontSize: 25,
     fontFamily: fontType['Pjs-Bold'],
     color: colors.black(),
     marginBottom: 16,
+    textAlign: 'center',
   },
   list: {
     gap: 16,

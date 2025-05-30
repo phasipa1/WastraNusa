@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {Viev, Text, StyleSheet, ScrollView} from 'react-native';
 import {colors, fontType} from '../../theme';
 
 export default function AboutScreen() {

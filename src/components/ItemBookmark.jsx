@@ -15,7 +15,7 @@ const truncateTextByWords = (text, maxWords) => {
 const ItemBookmark = ({ item, onPressBookmark }) => {
     const navigation = useNavigation();
   return (
-   <TouchableOpacity style={styles.cardItem} onPress={()=>navigation.navigate('BlogDetail', {blogId: item.id})}>
+   <TouchableOpacity style={styles.cardItem} onPress={()=>navigation.navigate('Detail', {blogId: item.id})}>
       <FastImage
         style={styles.cardImage}
         source={{

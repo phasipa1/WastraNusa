@@ -96,6 +96,18 @@ const Router = () => {
           ...TransitionPresets.SlideFromRightIOS,
         }}
       />
+      <Stack.Screen
+  name="AddBlog"
+  component={AddBlogForm}
+  options={{
+    headerShown: false, 
+    animationEnabled: true,
+    animationTypeForReplace: 'pop',
+    gestureEnabled: true,
+    gestureDirection : 'horizontal',
+    ...TransitionPresets.SlideFromRightIOS,
+  }}
+/>
     </Stack.Navigator>
   );
 };

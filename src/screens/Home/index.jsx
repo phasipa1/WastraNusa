@@ -1,24 +1,38 @@
-import React from 'react';
-import {View, Text, TextInput, Pressable, ScrollView, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
-import {SearchNormal, Element3, Clock, Message, Receipt21} from 'iconsax-react-native';
+import React, {useRef} from 'react';
+import {Animated,View,Text,TextInput,Pressable,StyleSheet, FlatList,TouchableOpacity,} from 'react-native';
+import {SearchNormal, Edit} from 'iconsax-react-native';
 import {colors, fontType} from '../../theme';
 import {ListHorizontal, ItemSmall} from '../../components';
 import {CategoryList, BlogList} from '../../data';
-import {Edit} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
-
-
 
 export default function Home() {
   const navigation = useNavigation();
+  // === ANIMATION SETUP ===
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const diffClampY = Animated.diffClamp(scrollY, 0, 52);
+  const headerY = diffClampY.interpolate({
+    inputRange: [0, 52],
+    outputRange: [0, -52],
+  });
+
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }]}>
-        <Text style={styles.title}>WastraNusa</Text>
-      </View>
-      
-      {/* Search Bar */}
+  <View style={styles.container}>
+    <Animated.View style={[styles.header, {transform: [{translateY: headerY}]}]}>
+      <Text style={styles.title}>WastraNusa</Text>
+    </Animated.View>
+
+    <Animated.ScrollView
+      showsVerticalScrollIndicator={false}
+      onScroll={Animated.event(
+        [{nativeEvent: {contentOffset: {y: scrollY}}}],
+        {useNativeDriver: true},
+      )}
+      scrollEventThrottle={16}
+      contentContainerStyle={{
+        paddingTop: 62,
+        paddingBottom: 54,
+      }}>
       <View style={searchBar.container}>
         <TextInput
           style={searchBar.input}
@@ -30,40 +44,36 @@ export default function Home() {
         </Pressable>
       </View>
 
-      {/* List Category */}
       <View style={styles.listCategory}>
         <FlatListCategory />
       </View>
 
-      {/* List Blog */}
       <ListBlog />
+    </Animated.ScrollView>
 
-      {/* Floating Button */}
-      <TouchableOpacity
-        style={styles.floatingButton}
-        onPress={() => navigation.navigate('AddBlog')}>
-        <Edit color="white" variant="Linear" size={20} />
-      </TouchableOpacity>
-    </View>
-  );
+    <TouchableOpacity
+      style={styles.floatingButton}
+      onPress={() => navigation.navigate('AddBlog')}>
+      <Edit color="white" variant="Linear" size={20} />
+    </TouchableOpacity>
+  </View>
+);
+
 }
-
 
 const ListBlog = () => {
   const horizontalData = BlogList.slice(0, 3);
   const verticalData = BlogList.slice(3);
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={styles.listBlog}>
-        <ListHorizontal data={horizontalData} />
-        <View style={itemVertical.listCard}>
-          {verticalData.map((item, index) => (
-            <ItemSmall item={item} key={index} />
-          ))}
-        </View>
+    <View style={styles.listBlog}>
+      <ListHorizontal data={horizontalData} />
+      <View style={itemVertical.listCard}>
+        {verticalData.map((item, index) => (
+          <ItemSmall item={item} key={index} />
+        ))}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -94,37 +104,22 @@ const FlatListCategory = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  floatingButton: {
-  backgroundColor: colors.blue(),
-  padding: 15,
-  position: 'absolute',
-  bottom: 24,
-  right: 24,
-  borderRadius: 10,
-  shadowColor: colors.blue(),
-  shadowOffset: {
-    width: 0,
-    height: 4,
-  },
-  shadowOpacity: 0.3,
-  shadowRadius: 4.65,
-  elevation: 8,
-},
 
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#D4F6FF',
   },
   header: {
     paddingHorizontal: 24,
-    justifyContent: 'space-between',
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
     height: 52,
     paddingTop: 8,
     paddingBottom: 4,
     elevation: 8,
+    backgroundColor: colors.white(),
   },
   title: {
     fontSize: 25,
@@ -137,6 +132,30 @@ const styles = StyleSheet.create({
   listBlog: {
     paddingVertical: -5,
     gap: 10,
+  },
+  floatingButton: {
+    backgroundColor: '#FFC1DA',
+    padding: 15,
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    borderRadius: 10,
+    shadowColor: '#FFC1DA',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 52,
+    backgroundColor: colors.white(),
   },
 });
 
@@ -157,7 +176,7 @@ const searchBar = StyleSheet.create({
     fontFamily: fontType['Pjs-Regular'],
   },
   button: {
-    backgroundColor: colors.grey(),
+    backgroundColor:'#FFC1DA',
     alignItems: 'center',
     justifyContent: 'center',
     height: 40,
@@ -169,7 +188,7 @@ const searchBar = StyleSheet.create({
 
 const itemVertical = StyleSheet.create({
   listCard: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 10,
     gap: 15,
   },
@@ -189,3 +208,4 @@ const category = StyleSheet.create({
     lineHeight: 18,
   },
 });
+
