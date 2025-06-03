@@ -1,89 +1,134 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
-import { ArrowLeft } from 'iconsax-react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
+import { ArrowLeft, AddSquare, Add } from 'iconsax-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { fontType, colors } from '../../theme';
-import axios from 'axios';
+import ImagePicker from 'react-native-image-crop-picker';
+import { getFirestore, onSnapshot, updateDoc, doc } from '@react-native-firebase/firestore';
 
 const EditBlogForm = ({ route }) => {
-    // ambil parameter blogId
     const { blogId } = route.params;
-
     const dataCategory = [
-    {id: 1, name: 'Sejarah '},
-    {id: 2, name: 'Jenis Batik'},
-    {id: 3, name: 'Filosofi Dan Motif Batik'},
-  ];0
-
+        { id: 1, name: 'Food' },
+        { id: 2, name: 'Sports' },
+        { id: 3, name: 'Technology' },
+        { id: 4, name: 'Fashion' },
+        { id: 5, name: 'Health' },
+        { id: 6, name: 'Lifestyle' },
+        { id: 7, name: 'Music' },
+        { id: 8, name: 'Car' },
+    ];
     const [blogData, setBlogData] = useState({
         title: '',
         content: '',
         category: {},
+        totalLikes: 0,
         totalComments: 0,
     });
-
     const handleChange = (key, value) => {
         setBlogData({
             ...blogData,
             [key]: value,
         });
     };
-
     const [image, setImage] = useState(null);
+    const [oldImage, setOldImage] = useState(null);
     const navigation = useNavigation();
-
-    // state status apakah sedang loading/tidak
     const [loading, setLoading] = useState(true);
-
-    // fungsi untuk mengambil data blog berdasarkan id
-    const getBlogById = async () => {
-        setLoading(true);
-        try {
-            // ambil data blog berdasarkan ID dengan metode GET 
-            const response = await axios.get(
-                `https://683d692d199a0039e9e55a79.mockapi.io/api/Blog/${blogId}`,
-            );
-            // atur state blog data menjadi data blog yang di dapatkan 
-            // dari response API
-            setBlogData({
-                title: response.data.title,
-                content: response.data.content,
-                category: {
-                    id: response.data.category.id,
-                    name: response.data.category.name
-                }
-            })
-            // atur data gambar
-            setImage(response.data.image)
-            setLoading(false);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     useEffect(() => {
-        getBlogById();
+        const db = getFirestore();
+        const blogRef = doc(db, 'blog', blogId);
+
+        const subscriber = onSnapshot(blogRef, documentSnapshot => {
+            const blogData = documentSnapshot.data();
+            if (blogData) {
+                console.log('Blog data: ', blogData);
+                setBlogData({
+                    title: blogData.title,
+                    content: blogData.content,
+                    category: {
+                        id: blogData.category.id,
+                        name: blogData.category.name,
+                    },
+                });
+                setOldImage(blogData.image);
+                setImage(blogData.image);
+                setLoading(false);
+            } else {
+                console.log(`Blog with ID ${blogId} not found.`);
+            }
+        });
+        setLoading(false);
+        return () => subscriber();
     }, [blogId]);
+
+    const handleImagePick = async () => {
+        ImagePicker.openPicker({
+            width: 1920,
+            height: 1080,
+            cropping: true,
+        })
+            .then(image => {
+                console.log(image);
+                setImage(image.path);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    };
 
     const handleUpdate = async () => {
         setLoading(true);
+        let filename = image.substring(image.lastIndexOf('/') + 1);
+        const extension = filename.split('.').pop();
+        const name = filename.split('.').slice(0, -1).join('.');
+        filename = name + Date.now() + '.' + extension;
+
         try {
-            // update spesifik data blog (ID) menggunakan metode PUT
-            const response = await axios
-                .put(`https://683d692d199a0039e9e55a79.mockapi.io/api/Blog/${blogId}`, {
-                    title: blogData.title,
-                    category: blogData.category,
-                    image,
-                    content: blogData.content,
-                    totalComments: blogData.totalComments,
+            if (image !== oldImage && oldImage) {
+                await fetch(`https://backend-file-praktikum.vercel.app/delete/${image}`, {
+                    method: 'POST',
                 });
-            if (response.status == 200) {
-                navigation.goBack();
             }
-        } catch (e) {
-            Alert.alert('error', `${e.message}`);
-        } finally {
+
+            let newImageUrl = image;
+
+            if (image !== oldImage) {
+                const imageFormData = new FormData();
+                imageFormData.append('file', {
+                    uri: image,
+                    type: `image/${extension}`, // or 'image/png'
+                    name: filename,
+                });
+
+                const result = await fetch('https://backend-file-praktikum.vercel.app/upload/', {
+                    method: 'POST',
+                    body: imageFormData,
+                });
+                if (result.status !== 200) {
+                    throw new Error("failed to upload image");
+                }
+
+                const { url } = await result.json();
+                newImageUrl = url;
+            }
+
+            const url = image !== oldImage ? newImageUrl : oldImage;
+            const db = getFirestore();
+            const blogRef = doc(db, 'blog', blogId);
+            updateDoc(blogRef, {
+                title: blogData.title,
+                category: blogData.category,
+                image: url,
+                content: blogData.content,
+            });
+
             setLoading(false);
+            console.log('Blog Updated!');
+            navigation.goBack();
+        } catch (error) {
+            console.log(error);
         }
     };
 
@@ -124,15 +169,6 @@ const EditBlogForm = ({ route }) => {
                     />
                 </View>
                 <View style={[textInput.borderDashed]}>
-                    <TextInput
-                        placeholder="Image"
-                        value={image}
-                        onChangeText={text => setImage(text)}
-                        placeholderTextColor={colors.grey(0.6)}
-                        style={textInput.content}
-                    />
-                </View>
-                <View style={[textInput.borderDashed]}>
                     <Text
                         style={{
                             fontSize: 12,
@@ -166,19 +202,69 @@ const EditBlogForm = ({ route }) => {
                         })}
                     </View>
                 </View>
+                {image ? (
+                    <View style={{ position: 'relative' }}>
+                        <FastImage
+                            style={{ width: '100%', height: 127, borderRadius: 5 }}
+                            source={{
+                                uri: image,
+                                headers: { Authorization: 'someAuthToken' },
+                                priority: FastImage.priority.high,
+                            }}
+                            resizeMode={FastImage.resizeMode.cover}
+                        />
+                        <TouchableOpacity
+                            style={{
+                                position: 'absolute',
+                                top: -5,
+                                right: -5,
+                                backgroundColor: colors.blue(),
+                                borderRadius: 25,
+                            }}
+                            onPress={() => setImage(null)}>
+                            <Add
+                                size={20}
+                                variant="Linear"
+                                color={colors.white()}
+                                style={{ transform: [{ rotate: '45deg' }] }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <TouchableOpacity onPress={handleImagePick}>
+                        <View
+                            style={[
+                                textInput.borderDashed,
+                                {
+                                    gap: 10,
+                                    paddingVertical: 30,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                },
+                            ]}>
+                            <AddSquare color={colors.grey(0.6)} variant="Linear" size={42} />
+                            <Text
+                                style={{
+                                    fontFamily: fontType['Pjs-Regular'],
+                                    fontSize: 12,
+                                    color: colors.grey(0.6),
+                                }}>
+                                Upload Thumbnail
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
             <View style={styles.bottomBar}>
                 <TouchableOpacity style={styles.button} onPress={handleUpdate}>
                     <Text style={styles.buttonLabel}>Update</Text>
                 </TouchableOpacity>
             </View>
-
-            {/* Menampilkan status loading */}
-            <Modal visible={loading} animationType='none' transparent>
+            {loading && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color={colors.blue()} />
                 </View>
-            </Modal>
+            )}
         </View>
     );
 };
@@ -233,13 +319,16 @@ const styles = StyleSheet.create({
         color: colors.white(),
     },
     loadingOverlay: {
-        flex: 1,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         backgroundColor: colors.black(0.4),
         justifyContent: 'center',
         alignItems: 'center',
     },
 });
-
 const textInput = StyleSheet.create({
     borderDashed: {
         borderStyle: 'dashed',
@@ -261,7 +350,6 @@ const textInput = StyleSheet.create({
         padding: 0,
     },
 });
-
 const category = StyleSheet.create({
     title: {
         fontSize: 12,
@@ -284,3 +372,5 @@ const category = StyleSheet.create({
         fontFamily: fontType['Pjs-Medium'],
     },
 });
+
+

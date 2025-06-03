@@ -1,36 +1,73 @@
-import React, {useState, useRef, useEffect, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  ActivityIndicator,
-  Alert,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
-import {ArrowLeft,Message, Receipt21, Share, More} from 'iconsax-react-native';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Like1, Receipt21, Message, Share, More } from 'iconsax-react-native';
+import { useNavigation } from '@react-navigation/native';
 import FastImage from '@d11/react-native-fast-image';
-import {fontType, colors} from '../../theme';
-import {formatDate} from '../../utils/formatDate';
-import {formatNumber} from '../../utils/formatNumber';
-import axios from 'axios';
+import { fontType, colors } from '../../theme';
+import { doc, getFirestore, onSnapshot } from '@react-native-firebase/firestore';
+import { formatNumber } from '../../utils/formatNumber';
+import { formatDate } from '../../utils/formatDate';
 import ActionSheet from 'react-native-actions-sheet';
 
-
-const DetailBlogScreen = ({route}) => {
-  const {blogId} = route.params;
+const BlogDetail = ({ route }) => {
+  const { blogId } = route.params;
   const navigation = useNavigation();
-  const actionSheetRef = useRef(null);
-
-  const [selectedBlog, setSelectedBlog] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [iconStates, setIconStates] = useState({
-    liked: {variant: 'Linear', color: colors.grey(0.6)},
-    bookmarked: {variant: 'Linear', color: colors.grey(0.6)},
+    liked: { variant: 'Linear', color: colors.grey(0.6) },
+    bookmarked: { variant: 'Linear', color: colors.grey(0.6) },
   });
+  const [loading, setLoading] = useState(true);
+  const [selectedBlog, setSelectedBlog] = useState(null);
+  const actionSheetRef = useRef(null);
+  const openActionSheet = () => {
+    actionSheetRef.current?.show();
+  };
+  const closeActionSheet = () => {
+    actionSheetRef.current?.hide();
+  };
+  useEffect(() => {
+    const db = getFirestore();
+    const blogRef = doc(db, 'blog', blogId);
 
+    const unsub = onSnapshot(blogRef, (documentSnapshot) => {
+      const blogData = documentSnapshot.data();
+      if (blogData) {
+        console.log('Blog data: ', blogData);
+        setSelectedBlog(blogData);
+      } else {
+        console.log(`Blog with ID ${blogId} not found.`);
+      }
+    });
+
+    setLoading(false);
+    return () => unsub();
+  }, [blogId]);
+  const navigateEdit = () => {
+    closeActionSheet();
+    navigation.navigate('EditBlog', { blogId });
+  };
+  const handleDelete = async () => {
+    closeActionSheet();
+    setLoading(true);
+    try {
+      const db = getFirestore();
+      const blogRef = doc(db, 'blog', blogId);
+      await blogRef.delete();
+
+      if (selectedBlog?.image) {
+        await fetch(`https://backend-file-praktikum.vercel.app/delete/${selectedBlog.image}`, {
+          method: 'POST',
+        });
+      }
+      console.log('Blog deleted!');
+      closeActionSheet();
+      setSelectedBlog(null);
+      setLoading(false)
+      navigation.goBack();
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const scrollY = useRef(new Animated.Value(0)).current;
   const diffClampY = Animated.diffClamp(scrollY, 0, 52);
   const headerY = diffClampY.interpolate({
@@ -42,90 +79,94 @@ const DetailBlogScreen = ({route}) => {
     outputRange: [0, 52],
   });
 
-  const toggleIcon = icon => {
-    setIconStates(prev => ({
-      ...prev,
-      [icon]: {
-        variant: prev[icon].variant === 'Linear' ? 'Bold' : 'Linear',
-        color: prev[icon].variant === 'Linear' ? colors.blue() : colors.grey(0.6),
+  const toggleIcon = iconName => {
+    setIconStates(prevStates => ({
+      ...prevStates,
+      [iconName]: {
+        variant: prevStates[iconName].variant === 'Linear' ? 'Bold' : 'Linear',
+        color:
+          prevStates[iconName].variant === 'Linear'
+            ? colors.blue()
+            : colors.grey(0.6),
       },
     }));
   };
-
-  const getBlogById = async () => {
-    try {
-      const res = await axios.get(`https://683d692d199a0039e9e55a79.mockapi.io/api/Blog/${blogId}`);
-      setSelectedBlog(res.data);
-      setLoading(false);
-    } catch (error) {
-      Alert.alert('Gagal memuat data', error.message);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await axios.delete(`https://683d692d199a0039e9e55a79.mockapi.io/api/Blog/${blogId}`);
-      actionSheetRef.current?.hide();
-      navigation.goBack();
-    } catch (error) {
-      Alert.alert('Gagal menghapus', error.message);
-    }
-  };
-
-  const navigateEdit = () => {
-    navigation.navigate('EditBlog', {blogId});
-    actionSheetRef.current?.hide();
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      getBlogById();
-    }, [blogId])
-  );
-
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.header, {transform: [{translateY: headerY}]}]}>
+      <Animated.View
+        style={[styles.header, { transform: [{ translateY: headerY }] }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft color={colors.grey(0.6)} variant="Linear" size={24} />
         </TouchableOpacity>
-        <View style={{flexDirection: 'row', gap: 20}}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20 }}>
           <Share color={colors.grey(0.6)} variant="Linear" size={24} />
-          <TouchableOpacity onPress={() => actionSheetRef.current?.show()}>
-            <More color={colors.grey(0.6)} variant="Linear" style={{transform: [{rotate: '90deg'}]}} />
+          <TouchableOpacity onPress={openActionSheet}>
+            <More
+              color={colors.grey(0.6)}
+              variant="Linear"
+              style={{ transform: [{ rotate: '90deg' }] }}
+            />
           </TouchableOpacity>
         </View>
       </Animated.View>
-
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.blue()} />
+        <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+          <ActivityIndicator size={'large'} color={colors.blue()} />
         </View>
       ) : (
         <Animated.ScrollView
-          onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
-            useNativeDriver: true,
-          })}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingHorizontal: 24, paddingTop: 62, paddingBottom: 54}}>
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true },
+          )}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 62,
+            paddingBottom: 54,
+          }}>
           <FastImage
             style={styles.image}
-            source={{uri: selectedBlog?.image}}
-            resizeMode={FastImage.resizeMode.cover}
-          />
-          <View style={styles.metaInfo}>
+            source={{
+              uri: selectedBlog?.image,
+              headers: { Authorization: 'someAuthToken' },
+              priority: FastImage.priority.high,
+            }}
+            resizeMode={FastImage.resizeMode.cover}></FastImage>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              marginTop: 15,
+            }}>
             <Text style={styles.category}>{selectedBlog?.category.name}</Text>
-            <Text style={styles.date}>{formatDate(selectedBlog?.createdAt)}</Text>
+            <Text style={styles.date}>
+              {formatDate(selectedBlog?.createdAt)}
+            </Text>
           </View>
           <Text style={styles.title}>{selectedBlog?.title}</Text>
           <Text style={styles.content}>{selectedBlog?.content}</Text>
         </Animated.ScrollView>
       )}
-
-      <Animated.View style={[styles.bottomBar, {transform: [{translateY: bottomBarY}]}]}>
-        <View style={styles.iconRow}>
+      <Animated.View
+        style={[styles.bottomBar, { transform: [{ translateY: bottomBarY }] }]}>
+        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => toggleIcon('liked')}>
+            <Like1
+              color={iconStates.liked.color}
+              variant={iconStates.liked.variant}
+              size={24}
+            />
+          </TouchableOpacity>
+          <Text style={styles.info}>
+            {formatNumber(selectedBlog?.totalLikes)}
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
           <Message color={colors.grey(0.6)} variant="Linear" size={24} />
-          <Text style={styles.info}>{formatNumber(selectedBlog?.totalComments)}</Text>
+          <Text style={styles.info}>
+            {formatNumber(selectedBlog?.totalComments)}
+          </Text>
         </View>
         <TouchableOpacity onPress={() => toggleIcon('bookmarked')}>
           <Receipt21
@@ -135,46 +176,113 @@ const DetailBlogScreen = ({route}) => {
           />
         </TouchableOpacity>
       </Animated.View>
-
-      <ActionSheet ref={actionSheetRef}>a
-        <TouchableOpacity style={styles.sheetBtn} onPress={navigateEdit}>
-          <Text style={styles.sheetText}>Edit</Text>
+      <ActionSheet
+        ref={actionSheetRef}
+        containerStyle={{
+          borderTopLeftRadius: 25,
+          borderTopRightRadius: 25,
+        }}
+        indicatorStyle={{
+          width: 100,
+        }}
+        gestureEnabled={true}
+        defaultOverlayOpacity={0.3}>
+        <TouchableOpacity
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 15,
+          }}
+          onPress={navigateEdit}>
+          <Text
+            style={{
+              fontFamily: fontType['Pjs-Medium'],
+              color: colors.black(),
+              fontSize: 18,
+            }}>
+            Edit
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.sheetBtn} onPress={handleDelete}>
-          <Text style={styles.sheetText}>Delete</Text>
+        <TouchableOpacity
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 15,
+          }}
+          onPress={handleDelete}>
+          <Text
+            style={{
+              fontFamily: fontType['Pjs-Medium'],
+              color: colors.black(),
+              fontSize: 18,
+            }}>
+            Delete
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.sheetBtn} onPress={() => actionSheetRef.current?.hide()}>
-          <Text style={[styles.sheetText, {color: 'red'}]}>Cancel</Text>
+        <TouchableOpacity
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 15,
+          }}
+          onPress={closeActionSheet}>
+          <Text
+            style={{
+              fontFamily: fontType['Pjs-Medium'],
+              color: 'red',
+              fontSize: 18,
+            }}>
+            Cancel
+          </Text>
         </TouchableOpacity>
       </ActionSheet>
     </View>
   );
 };
 
-export default DetailBlogScreen;
+export default BlogDetail;
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.white()},
-  header: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0,
+  container: {
+    flex: 1,
     backgroundColor: colors.white(),
-    zIndex: 10,
-    height: 52,
+  },
+  header: {
     paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    paddingTop: 8,
+    paddingBottom: 4,
+    position: 'absolute',
+    zIndex: 1000,
+    top: 0,
+    right: 0,
+    left: 0,
+    backgroundColor: colors.white(),
+  },
+  bottomBar: {
+    position: 'absolute',
+    zIndex: 1000,
+    backgroundColor: colors.white(),
+    paddingVertical: 14,
+    paddingHorizontal: 60,
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   image: {
     height: 200,
-    width: '100%',
+    width: 'auto',
     borderRadius: 15,
   },
-  metaInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
+  info: {
+    color: colors.grey(0.6),
+    fontFamily: fontType['Pjs-SemiBold'],
+    fontSize: 12,
   },
   category: {
     color: colors.blue(),
@@ -182,57 +290,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   date: {
-    fontSize: 10,
-    fontFamily: fontType['Pjs-Medium'],
     color: colors.grey(0.6),
+    fontFamily: fontType['Pjs-Medium'],
+    fontSize: 10,
   },
   title: {
-    marginTop: 12,
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: fontType['Pjs-Bold'],
     color: colors.black(),
+    marginTop: 10,
   },
   content: {
-    marginTop: 10,
-    fontSize: 12,
-    lineHeight: 22,
     color: colors.grey(),
     fontFamily: fontType['Pjs-Medium'],
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    backgroundColor: colors.white(),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 60,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-  },
-  iconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  info: {
-    fontSize: 12,
-    fontFamily: fontType['Pjs-SemiBold'],
-    color: colors.grey(0.6),
-  },
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sheetBtn: {
-    alignItems: 'center',
-    paddingVertical: 15,
-  },
-  sheetText: {
-    fontSize: 18,
-    fontFamily: fontType['Pjs-Medium'],
-    color: colors.black(),
+    fontSize: 10,
+    lineHeight: 20,
+    marginTop: 15,
   },
 });
+
+

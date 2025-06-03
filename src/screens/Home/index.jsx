@@ -1,9 +1,5 @@
 import React, {useRef, useState, useCallback} from 'react';
-import {
-  Animated, View, Text, TextInput, Pressable,
-  StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, ScrollView, RefreshControl
-} from 'react-native';
+import {Animated, View, Text, TextInput, Pressable,StyleSheet, FlatList, TouchableOpacity,ActivityIndicator, ScrollView, RefreshControl} from 'react-native';
 import {SearchNormal, Edit} from 'iconsax-react-native';
 import {colors, fontType} from '../../theme';
 import {ListHorizontal, ItemSmall} from '../../components';

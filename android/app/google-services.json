@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "50999262341",
+    "project_id": "wastranusa-2dfdb",
+    "storage_bucket": "wastranusa-2dfdb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:50999262341:android:c64cc648c693b5c412bdec",
+        "android_client_info": {
+          "package_name": "com.wastranusa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbeAryu95N5XUmB8eV0Pv1b2yjxGzSihc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
