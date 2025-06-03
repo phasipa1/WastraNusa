@@ -1,34 +1,69 @@
 import React, {useState} from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView} from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ScrollView, ActivityIndicator, Alert, Modal
+} from 'react-native';
 import {ArrowLeft} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
 import {fontType, colors} from '../../theme';
+import axios from 'axios';
 
 const AddBlogForm = () => {
-const dataCategory = [
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+
+  const dataCategory = [
     {id: 1, name: 'Sejarah'},
     {id: 2, name: 'Jenis Batik'},
     {id: 3, name: 'Filosofi Dan Motif Batik'},
   ];
+
   const [blogData, setBlogData] = useState({
     title: '',
     content: '',
     category: {},
-    totalLikes: 0,
     totalComments: 0,
   });
+
+  const [image, setImage] = useState('');
+
   const handleChange = (key, value) => {
-    setBlogData({
-      ...blogData,
+    setBlogData(prev => ({
+      ...prev,
       [key]: value,
-    });
+    }));
   };
-  const [image, setImage] = useState(null);
-  const navigation = useNavigation();
+
+  const handleUpload = async () => {
+    if (!blogData.title || !blogData.content || !image || !blogData.category.id) {
+      Alert.alert('Error', 'Semua field wajib diisi.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post('https://683d692d199a0039e9e55a79.mockapi.io/api/Blog',
+        {
+          title: blogData.title,
+          content: blogData.content,
+          image: image,
+          category: blogData.category,
+          totalComments: blogData.totalComments,
+          createdAt: new Date(),
+        }
+      );
+      if (response.status === 201) {
+        navigation.goBack();
+      }
+    } catch (e) {
+      Alert.alert('Gagal Mengunggah Blog', `Status: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <ArrowLeft color={colors.black()} variant="Linear" size={24} />
@@ -37,12 +72,8 @@ const dataCategory = [
           <Text style={styles.title}>Write blog</Text>
         </View>
       </View>
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingVertical: 10,
-          gap: 10,
-        }} >
+
+      <ScrollView contentContainerStyle={{paddingHorizontal: 24, paddingVertical: 10, gap: 10}}>
         <View style={textInput.borderDashed}>
           <TextInput
             placeholder="Title"
@@ -53,6 +84,7 @@ const dataCategory = [
             style={textInput.title}
           />
         </View>
+
         <View style={[textInput.borderDashed, {minHeight: 250}]}>
           <TextInput
             placeholder="Content"
@@ -63,16 +95,18 @@ const dataCategory = [
             style={textInput.content}
           />
         </View>
-        <View style={[textInput.borderDashed]}>
+
+        <View style={textInput.borderDashed}>
           <TextInput
-            placeholder="Image"
+            placeholder="Image URL"
             value={image}
             onChangeText={text => setImage(text)}
             placeholderTextColor={colors.grey(0.6)}
             style={textInput.content}
           />
         </View>
-        <View style={[textInput.borderDashed]}>
+
+        <View style={textInput.borderDashed}>
           <Text
             style={{
               fontSize: 12,
@@ -81,26 +115,17 @@ const dataCategory = [
             }}>
             Category
           </Text>
-          <View
-            style={category.container}>
+          <View style={category.container}>
             {dataCategory.map((item, index) => {
-              const bgColor =
-                item.id === blogData.category.id
-                  ? colors.black()
-                  : colors.grey(0.08);
-              const color =
-                item.id === blogData.category.id
-                  ? colors.white()
-                  : colors.grey();
+              const isSelected = item.id === blogData.category.id;
               return (
                 <TouchableOpacity
                   key={index}
-                  onPress={() =>
-                    handleChange('category', {id: item.id, name: item.name})
-                  }
-                  style={[category.item, {backgroundColor: bgColor}]}>
-                  <Text
-                    style={[category.name, {color: color}]}>
+                  onPress={() => handleChange('category', {id: item.id, name: item.name})}
+                  style={[category.item, {
+                    backgroundColor: isSelected ? colors.black() : colors.grey(0.08),
+                  }]}>
+                  <Text style={[category.name, {color: isSelected ? colors.white() : colors.grey()}]}>
                     {item.name}
                   </Text>
                 </TouchableOpacity>
@@ -109,8 +134,14 @@ const dataCategory = [
           </View>
         </View>
       </ScrollView>
+
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
+        <Modal visible={loading} animationType="none" transparent>
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color={colors.blue()} />
+          </View>
+        </Modal>
+        <TouchableOpacity style={styles.button} onPress={handleUpload}>
           <Text style={styles.buttonLabel}>Upload</Text>
         </TouchableOpacity>
       </View>
@@ -153,6 +184,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
 
     elevation: 5,
+  },
+  loadingOverlay: {
+      flex: 1,
+      backgroundColor: colors.black(0.4),
+      justifyContent: 'center',
+      alignItems: 'center',
   },
   button: {
     paddingHorizontal: 20,

@@ -1,84 +1,105 @@
-import React, {useRef} from 'react';
-import {Animated,View,Text,TextInput,Pressable,StyleSheet, FlatList,TouchableOpacity,} from 'react-native';
+import React, {useRef, useState, useCallback} from 'react';
+import {
+  Animated, View, Text, TextInput, Pressable,
+  StyleSheet, FlatList, TouchableOpacity,
+  ActivityIndicator, ScrollView, RefreshControl
+} from 'react-native';
 import {SearchNormal, Edit} from 'iconsax-react-native';
 import {colors, fontType} from '../../theme';
 import {ListHorizontal, ItemSmall} from '../../components';
-import {CategoryList, BlogList} from '../../data';
-import {useNavigation} from '@react-navigation/native';
+import {CategoryList} from '../../data';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import axios from 'axios';
 
 export default function Home() {
   const navigation = useNavigation();
-  // === ANIMATION SETUP ===
   const scrollY = useRef(new Animated.Value(0)).current;
   const diffClampY = Animated.diffClamp(scrollY, 0, 52);
-  const headerY = diffClampY.interpolate({
-    inputRange: [0, 52],
-    outputRange: [0, -52],
-  });
+  const headerY = diffClampY.interpolate({inputRange: [0, 52], outputRange: [0, -52]});
+
+  const [blogData, setBlogData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const getDataBlog = async () => {
+    try {
+      const res = await axios.get('https://683d692d199a0039e9e55a79.mockapi.io/api/Blog');
+      setBlogData(res.data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch blog data:', err);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    getDataBlog().finally(() => setRefreshing(false));
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getDataBlog();
+    }, [])
+  );
 
   return (
-  <View style={styles.container}>
-    <Animated.View style={[styles.header, {transform: [{translateY: headerY}]}]}>
-      <Text style={styles.title}>WastraNusa</Text>
-    </Animated.View>
+    <View style={styles.container}>
+      <Animated.View style={[styles.header, {transform: [{translateY: headerY}]}]}>
+        <Text style={styles.title}>WastraNusa</Text>
+      </Animated.View>
 
-    <Animated.ScrollView
-      showsVerticalScrollIndicator={false}
-      onScroll={Animated.event(
-        [{nativeEvent: {contentOffset: {y: scrollY}}}],
-        {useNativeDriver: true},
-      )}
-      scrollEventThrottle={16}
-      contentContainerStyle={{
-        paddingTop: 62,
-        paddingBottom: 54,
-      }}>
-      <View style={searchBar.container}>
-        <TextInput
-          style={searchBar.input}
-          placeholder="Search"
-          placeholderTextColor={colors.grey()}
-        />
-        <Pressable style={searchBar.button}>
-          <SearchNormal size={20} color={colors.white()} />
-        </Pressable>
-      </View>
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: true}
+        )}
+        scrollEventThrottle={16}
+        contentContainerStyle={{paddingTop: 62, paddingBottom: 54}}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={searchBar.container}>
+          <TextInput
+            style={searchBar.input}
+            placeholder="Search"
+            placeholderTextColor={colors.grey()}
+          />
+          <Pressable style={searchBar.button}>
+            <SearchNormal size={20} color={colors.white()} />
+          </Pressable>
+        </View>
 
-      <View style={styles.listCategory}>
-        <FlatListCategory />
-      </View>
+        <View style={styles.listCategory}>
+          <FlatListCategory />
+        </View>
 
-      <ListBlog />
-    </Animated.ScrollView>
+        <View style={styles.listBlog}>
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.blue()} />
+          ) : (
+            <>
+              <ListHorizontal data={blogData.slice(0, 3)} />
+              <View style={itemVertical.listCard}>
+                {blogData.slice(3).map((item, index) => (
+                  <ItemSmall key={index} item={item} />
+                ))}
+              </View>
+            </>
+          )}
+        </View>
+        </Animated.ScrollView>
 
-    <TouchableOpacity
-      style={styles.floatingButton}
-      onPress={() => navigation.navigate('AddBlog')}>
-      <Edit color="white" variant="Linear" size={20} />
-    </TouchableOpacity>
-  </View>
-);
-
-}
-
-const ListBlog = () => {
-  const horizontalData = BlogList.slice(0, 3);
-  const verticalData = BlogList.slice(3);
-
-  return (
-    <View style={styles.listBlog}>
-      <ListHorizontal data={horizontalData} />
-      <View style={itemVertical.listCard}>
-        {verticalData.map((item, index) => (
-          <ItemSmall item={item} key={index} />
-        ))}
-      </View>
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('AddBlog')}>
+        <Edit color="white" variant="Linear" size={20} />
+      </TouchableOpacity>
     </View>
   );
-};
+}
 
 const FlatListCategory = () => {
-  const [selected, setSelected] = React.useState(1);
+  const [selected, setSelected] = useState(1);
 
   const renderItem = ({item}) => {
     const color = item.id === selected ? colors.blue() : colors.grey();
@@ -94,16 +115,15 @@ const FlatListCategory = () => {
   return (
     <FlatList
       data={CategoryList}
+      horizontal
       keyExtractor={item => item.id.toString()}
       renderItem={renderItem}
-      horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{paddingHorizontal: 24}}
       ItemSeparatorComponent={() => <View style={{width: 10}} />}
     />
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -130,7 +150,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   listBlog: {
-    paddingVertical: -5,
     gap: 10,
   },
   floatingButton: {
@@ -141,21 +160,10 @@ const styles = StyleSheet.create({
     right: 24,
     borderRadius: 10,
     shadowColor: '#FFC1DA',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
-  },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 52,
-    backgroundColor: colors.white(),
   },
 });
 
@@ -208,4 +216,3 @@ const category = StyleSheet.create({
     lineHeight: 18,
   },
 });
-

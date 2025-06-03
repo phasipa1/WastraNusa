@@ -3,5 +3,6 @@ import About from "./About";
 import Detail from "./Detail";
 import Bookmark from "./Bookmark";
 import AddBlogForm from "./AddBlogForm";
-export {Home, About, Detail, Bookmark, AddBlogForm}
+import EditBlogForm from "./EditBlogForm";
+export {Home, About, Detail, Bookmark, AddBlogForm, EditBlogForm}
 
